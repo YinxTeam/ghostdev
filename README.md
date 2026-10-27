@@ -6,9 +6,11 @@
 
 ### Run Claude Code in your browser — a self-hosted, multi-session web terminal that shows you which agent needs you.
 
-[![Stars](https://img.shields.io/github/stars/hacktheghost/ghostdev?style=flat&color=3DE3A0&logo=github)](https://github.com/hacktheghost/ghostdev/stargazers)
-[![Issues](https://img.shields.io/github/issues/hacktheghost/ghostdev?color=5BC8FF)](https://github.com/hacktheghost/ghostdev/issues)
-[![Last commit](https://img.shields.io/github/last-commit/hacktheghost/ghostdev?color=9C8CFF)](https://github.com/hacktheghost/ghostdev/commits/main)
+[中文文档](README.zh-CN.md)
+
+[![Stars](https://img.shields.io/github/stars/YinxTeam/ghostdev?style=flat&color=3DE3A0&logo=github)](https://github.com/YinxTeam/ghostdev/stargazers)
+[![Issues](https://img.shields.io/github/issues/YinxTeam/ghostdev?color=5BC8FF)](https://github.com/YinxTeam/ghostdev/issues)
+[![Last commit](https://img.shields.io/github/last-commit/YinxTeam/ghostdev?color=9C8CFF)](https://github.com/YinxTeam/ghostdev/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3DE3A0.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/run-docker%20compose-5BC8FF.svg)](#quickstart)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-3DE3A0.svg)](#contributing)
@@ -85,7 +87,7 @@ while the others keep working. ghostdev surfaces that:
 ## Quickstart
 
 ```bash
-git clone https://github.com/hacktheghost/ghostdev.git
+git clone https://github.com/YinxTeam/ghostdev.git
 cd ghostdev
 cp .env.example .env          # tweak the label/port if you like
 docker compose up -d
@@ -178,10 +180,10 @@ MIT — see [LICENSE](LICENSE).
 
 ## Star History
 
-<a href="https://star-history.com/#hacktheghost/ghostdev&Date">
+<a href="https://star-history.com/#YinxTeam/ghostdev&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hacktheghost/ghostdev&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hacktheghost/ghostdev&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hacktheghost/ghostdev&type=Date" width="600" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=YinxTeam/ghostdev&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=YinxTeam/ghostdev&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=YinxTeam/ghostdev&type=Date" width="600" />
   </picture>
 </a>
