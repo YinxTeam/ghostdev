@@ -108,6 +108,8 @@ Web 终端本质上是**远程 shell**。ghostdev 故意只绑定到 `127.0.0.1`
 | `GHOSTDEV_PROXMOX_*` | _(关闭)_ | 可选的只读 Proxmox 宿主机状态（[文档](docs/proxmox-stats.zh-CN.md)） |
 
 构建不包含 Claude Code 的版本（纯 Web 终端）：`docker compose build --build-arg INSTALL_CLAUDE=false`。
+构建不包含 [cc-switch](https://github.com/SaladDay/cc-switch-cli) CLI 的版本：`docker compose build --build-arg INSTALL_CC_SWITCH=false`。
+当 deb.debian.org 慢或不稳定时，可换用更快的 Debian 镜像源：`docker compose build --build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn`。
 
 ## 原生安装（不使用 Docker）
 

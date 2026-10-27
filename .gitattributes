@@ -1,0 +1,7 @@
+# These files are COPYed into the Linux image (Dockerfile) or sourced by shells.
+# Force LF so Windows checkouts (git autocrlf) can never ship CRLF into the
+# image — CRLF in entrypoint.sh breaks the container ("'bash\r': No such file").
+*.sh       text eol=lf
+*.snippet  text eol=lf
+*.tmpl     text eol=lf
+*.conf     text eol=lf

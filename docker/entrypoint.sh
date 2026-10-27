@@ -34,7 +34,7 @@ STATS_PID=$!
 
 # shellcheck disable=SC2086  # SHELL_CMD is intentionally word-split into args
 ttyd -p "$TTYD_PORT" -i 127.0.0.1 -b /tty -a -W "${TTYD_CRED[@]}" \
-  -t fontSize=14 -t "fontFamily=JetBrains Mono, Hack, Menlo, monospace" -t disableLeaveAlert=true \
+  -t fontSize=14 -t "fontFamily=JetBrains Mono, Cascadia Mono, Consolas, Menlo, Microsoft YaHei, PingFang SC, Noto Sans Mono CJK SC, monospace" -t disableLeaveAlert=true \
   -t "theme=$THEME" \
   $SHELL_CMD &
 TTYD_PID=$!
