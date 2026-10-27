@@ -47,6 +47,11 @@ RUN if [ "$INSTALL_CC_SWITCH" = "true" ]; then \
       /usr/local/bin/cc-switch --version; \
     fi
 
+# UTF-8 locale. debian-slim defaults to POSIX, where tmux renders every non-ASCII
+# character (Chinese UI of cc-switch, Claude Code, ...) as "_". C.UTF-8 ships with libc.
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 # Non-root runtime user.
 RUN useradd -m -s /bin/bash -u 1000 ghost
 
