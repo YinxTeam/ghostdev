@@ -1,19 +1,19 @@
 services:
   ghostdev:
-    # Prebuilt multi-arch image (amd64 + arm64). To build locally instead, uncomment `build`
-    # and run `docker compose up -d --build`.
+    # 预构建的多架构镜像(amd64 + arm64)。若想改为本地构建,请取消注释 `build`,
+    # 然后运行 `docker compose up -d --build`。
     # build: .
     image: ${GHOSTDEV_IMAGE:-ghcr.io/yinxteam/ghostdev:latest}
     container_name: ghostdev
     restart: unless-stopped
     env_file: .env
-    # SAFE DEFAULT: bound to localhost only. A web terminal is a remote shell — do NOT
-    # expose it directly to the internet. Put a reverse proxy + auth in front and only
-    # then change the host address. See docs/SECURITY.md and docs/reverse-proxy.md.
+    # 安全默认值:仅绑定到本机。Web 终端等同于远程 shell —— 切勿直接暴露到公网。
+    # 请先在前面放置带认证的反向代理,然后再修改宿主机地址。
+    # 参见 docs/SECURITY.md 和 docs/reverse-proxy.md。
     ports:
       - "${GHOSTDEV_HOST_ADDR:-127.0.0.1}:${GHOSTDEV_HOST_PORT:-7680}:7680"
     volumes:
-      # Persists $HOME: tmux sessions config, shell history, and your Claude Code login.
+      # 持久化 $HOME:tmux 会话配置、shell 历史记录以及你的 Claude Code 登录状态。
       - ghostdev-home:/home/ghost
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7680/"]
