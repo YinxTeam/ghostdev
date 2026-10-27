@@ -122,7 +122,7 @@ All via `.env` (see [`.env.example`](.env.example)):
 | `GHOSTDEV_PROXMOX_*` | _(off)_ | Optional read-only Proxmox host stats ([docs](docs/proxmox-stats.md)) |
 
 Build without Claude Code (vanilla web terminal): `docker compose build --build-arg INSTALL_CLAUDE=false`.
-Build without the bundled [cc-switch](https://github.com/SaladDay/cc-switch-cli) CLI: `docker compose build --build-arg INSTALL_CC_SWITCH=false`.
+Build without the bundled [cc-switch](https://github.com/SaladDay/cc-switch-cli) CLI ([usage](docs/cc-switch.md)): `docker compose build --build-arg INSTALL_CC_SWITCH=false`.
 Build with a faster/closer Debian mirror when deb.debian.org is slow or flaky: `docker compose build --build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn`.
 
 ## Native install (no Docker)
