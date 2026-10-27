@@ -1,7 +1,9 @@
 services:
   ghostdev:
-    build: .
-    image: ghostdev:latest
+    # Prebuilt multi-arch image (amd64 + arm64). To build locally instead, uncomment `build`
+    # and run `docker compose up -d --build`.
+    # build: .
+    image: ${GHOSTDEV_IMAGE:-ghcr.io/yinxteam/ghostdev:latest}
     container_name: ghostdev
     restart: unless-stopped
     env_file: .env
