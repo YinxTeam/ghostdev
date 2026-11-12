@@ -28,7 +28,12 @@ RUN set -eux; \
     /usr/local/bin/ttyd --version
 
 # Claude Code CLI (the whole point). Skip with --build-arg INSTALL_CLAUDE=false.
-RUN if [ "$INSTALL_CLAUDE" = "true" ]; then \
+# Installed into /opt/npm-global (not /usr) and chowned to uid 1000 below, so the non-root
+# runtime user can self-update. Kept outside $HOME because $HOME is a persisted volume.
+ENV NPM_CONFIG_PREFIX=/opt/npm-global \
+    PATH=/opt/npm-global/bin:$PATH
+RUN mkdir -p /opt/npm-global && \
+    if [ "$INSTALL_CLAUDE" = "true" ]; then \
       npm install -g @anthropic-ai/claude-code && npm cache clean --force; \
     fi
 
@@ -68,7 +73,7 @@ RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /tmp/bashrc.snippet \
     && cat /tmp/bashrc.snippet >> /home/ghost/.bashrc \
     && rm /tmp/bashrc.snippet \
     && chmod +x /usr/local/bin/ghostdev-entrypoint \
-    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev
+    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/npm-global
 
 USER ghost
 WORKDIR /home/ghost
