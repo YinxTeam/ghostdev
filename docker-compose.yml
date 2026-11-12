@@ -12,6 +12,8 @@ services:
     # 参见 docs/SECURITY.md 和 docs/reverse-proxy.md。
     ports:
       - "${GHOSTDEV_HOST_ADDR:-127.0.0.1}:${GHOSTDEV_HOST_PORT:-7680}:7680"
+      # SSH(仅公钥)。只有设置了 GHOSTDEV_SSH_PUBKEY 时容器内才会启动 sshd。
+      - "${GHOSTDEV_SSH_HOST_ADDR:-0.0.0.0}:${GHOSTDEV_SSH_HOST_PORT:-2222}:2222"
     volumes:
       # 持久化 $HOME:tmux 会话配置、shell 历史记录以及你的 Claude Code 登录状态。
       - ghostdev-home:/home/ghost

@@ -42,11 +42,41 @@ TTYD_PID=$!
 nginx -c /tmp/ghostdev/nginx.conf &
 NGINX_PID=$!
 
-cleanup(){ kill "$STATS_PID" "$TTYD_PID" "$NGINX_PID" 2>/dev/null || true; }
+# Optional SSH (key-only, unprivileged sshd as this user). Enabled only when
+# GHOSTDEV_SSH_PUBKEY is set; several keys may be separated by newlines or a literal backslash-n.
+SSHD_PID=""
+if [ -n "${GHOSTDEV_SSH_PUBKEY:-}" ]; then
+  SSH_PORT="${GHOSTDEV_SSH_PORT:-2222}"
+  SSH_DIR="$HOME/.ssh"
+  HOSTKEY_DIR="$SSH_DIR/hostkeys"   # lives in the persisted $HOME so the host fingerprint is stable
+  mkdir -p "$HOSTKEY_DIR"; chmod 700 "$SSH_DIR" "$HOSTKEY_DIR"
+  [ -f "$HOSTKEY_DIR/ssh_host_ed25519_key" ] || ssh-keygen -q -t ed25519 -N '' -f "$HOSTKEY_DIR/ssh_host_ed25519_key"
+  printf '%b\n' "$GHOSTDEV_SSH_PUBKEY" > "$SSH_DIR/authorized_keys"
+  chmod 600 "$SSH_DIR/authorized_keys"
+  cat > /tmp/ghostdev/sshd_config <<SSHD
+Port $SSH_PORT
+HostKey $HOSTKEY_DIR/ssh_host_ed25519_key
+PidFile /tmp/ghostdev/sshd.pid
+AuthorizedKeysFile $SSH_DIR/authorized_keys
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+PermitRootLogin no
+UsePAM no
+StrictModes yes
+AllowUsers $(id -un)
+PrintMotd no
+SSHD
+  /usr/sbin/sshd -D -e -f /tmp/ghostdev/sshd_config &
+  SSHD_PID=$!
+  echo "ghostdev ssh: sshd :$SSH_PORT (key-only, user $(id -un))"
+fi
+
+cleanup(){ kill "$STATS_PID" "$TTYD_PID" "$NGINX_PID" $SSHD_PID 2>/dev/null || true; }
 trap cleanup EXIT INT TERM
 
 echo "ghostdev up: nginx :$NGINX_LISTEN -> ttyd :$TTYD_PORT + stats :$STATS_PORT (label=$GHOSTDEV_NODE_LABEL)"
 
-# If any of the three exits, tear the rest down and exit non-zero so Docker restarts us.
+# If any of the services exits, tear the rest down and exit non-zero so Docker restarts us.
 wait -n
 exit 1

@@ -16,7 +16,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update -o Acquire::Retries=5 \
     && apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
-      nginx-light nodejs npm tmux ca-certificates curl gettext-base tini procps git less \
+      nginx-light nodejs npm tmux ca-certificates curl gettext-base tini procps git less openssh-server \
     && rm -rf /var/lib/apt/lists/*
 
 # ttyd static release binary (multi-arch).
@@ -58,7 +58,15 @@ ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
 # Non-root runtime user.
-RUN useradd -m -s /bin/bash -u 1000 ghost
+# sshd runs unprivileged as ghost (see entrypoint): '*' = no usable password but NOT locked
+# (so pubkey login works); /run/sshd is the privsep dir; /etc/profile.d re-adds the npm prefix
+# and UTF-8 locale for SSH login shells (which reset PATH via /etc/profile).
+RUN useradd -m -s /bin/bash -u 1000 ghost \
+    && usermod -p '*' ghost \
+    && mkdir -p /run/sshd && chown ghost:ghost /run/sshd \
+    && rm -f /etc/ssh/ssh_host_*_key* \
+    && echo 'export PATH=/opt/npm-global/bin:$PATH' > /etc/profile.d/ghostdev.sh \
+    && echo 'export LANG=C.UTF-8 LC_ALL=C.UTF-8' >> /etc/profile.d/ghostdev.sh
 
 COPY web/                       /var/www/ghostdev/
 COPY stats/                     /opt/ghostdev-stats/
@@ -77,6 +85,6 @@ RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /tmp/bashrc.snippet \
 
 USER ghost
 WORKDIR /home/ghost
-EXPOSE 7680
+EXPOSE 7680 2222
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/ghostdev-entrypoint"]
