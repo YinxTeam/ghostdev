@@ -31,8 +31,8 @@ RUN set -eux; \
 # Installed into /opt/npm-global (not /usr) and chowned to uid 1000 below, so the non-root
 # runtime user can self-update. Kept outside $HOME because $HOME is a persisted volume.
 ENV NPM_CONFIG_PREFIX=/opt/npm-global \
-    PATH=/opt/npm-global/bin:$PATH
-RUN mkdir -p /opt/npm-global && \
+    PATH=/opt/ghost-bin:/opt/npm-global/bin:$PATH
+RUN mkdir -p /opt/npm-global /opt/ghost-bin && \
     if [ "$INSTALL_CLAUDE" = "true" ]; then \
       npm install -g @anthropic-ai/claude-code && npm cache clean --force; \
     fi
@@ -46,10 +46,10 @@ RUN if [ "$INSTALL_CC_SWITCH" = "true" ]; then \
       curl -fsSL "https://github.com/SaladDay/cc-switch-cli/releases/latest/download/cc-switch-cli-linux-${a}-musl.tar.gz" -o /tmp/cc-switch-cli.tgz; \
       mkdir -p /tmp/cc-switch-cli; \
       tar -xzf /tmp/cc-switch-cli.tgz -C /tmp/cc-switch-cli; \
-      mv /tmp/cc-switch-cli/cc-switch /usr/local/bin/cc-switch; \
-      chmod +x /usr/local/bin/cc-switch; \
+      mv /tmp/cc-switch-cli/cc-switch /opt/ghost-bin/cc-switch; \
+      chmod +x /opt/ghost-bin/cc-switch; \
       rm -rf /tmp/cc-switch-cli /tmp/cc-switch-cli.tgz; \
-      /usr/local/bin/cc-switch --version; \
+      /opt/ghost-bin/cc-switch --version; \
     fi
 
 # UTF-8 locale. debian-slim defaults to POSIX, where tmux renders every non-ASCII
@@ -65,7 +65,7 @@ RUN useradd -m -s /bin/bash -u 1000 ghost \
     && usermod -p '*' ghost \
     && mkdir -p /run/sshd && chown ghost:ghost /run/sshd \
     && rm -f /etc/ssh/ssh_host_*_key* \
-    && echo 'export PATH=/opt/npm-global/bin:$PATH' > /etc/profile.d/ghostdev.sh \
+    && echo 'export PATH=/opt/ghost-bin:/opt/npm-global/bin:$PATH' > /etc/profile.d/ghostdev.sh \
     && echo 'export LANG=C.UTF-8 LC_ALL=C.UTF-8' >> /etc/profile.d/ghostdev.sh
 
 COPY web/                       /var/www/ghostdev/
@@ -81,7 +81,7 @@ RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /tmp/bashrc.snippet \
     && cat /tmp/bashrc.snippet >> /home/ghost/.bashrc \
     && rm /tmp/bashrc.snippet \
     && chmod +x /usr/local/bin/ghostdev-entrypoint \
-    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/npm-global
+    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/npm-global /opt/ghost-bin
 
 USER ghost
 WORKDIR /home/ghost
