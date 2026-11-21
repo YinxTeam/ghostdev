@@ -119,10 +119,14 @@ All via `.env` (see [`.env.example`](.env.example)):
 | `GHOSTDEV_FILES_ENABLED` | `true` | Built-in file explorer ([docs](docs/file-explorer.md)) |
 | `GHOSTDEV_FILES_ROOT` | user home | Directory the file explorer is confined to |
 | `GHOSTDEV_FILES_READONLY` | `false` | `true` = browse/download only, no writes from the UI |
+| `GHOSTDEV_ORCA_ENABLE` | `true` | Run the [Orca](docs/orca.md) headless server (remote/mobile access via Orca Relay) |
+| `GHOSTDEV_WORKSPACE` | `~/workspace` | Orca project root (created automatically) |
 | `GHOSTDEV_PROXMOX_*` | _(off)_ | Optional read-only Proxmox host stats ([docs](docs/proxmox-stats.md)) |
 
 Build without Claude Code (vanilla web terminal): `docker compose build --build-arg INSTALL_CLAUDE=false`.
 Build without the bundled [cc-switch](https://github.com/SaladDay/cc-switch-cli) CLI ([usage](docs/cc-switch.md)): `docker compose build --build-arg INSTALL_CC_SWITCH=false`.
+Build without the bundled [Orca](https://github.com/stablyai/orca) headless server ([usage](docs/orca.md)): `docker compose build --build-arg INSTALL_ORCA=false`.
+Tool versions default to the latest release at build time; pin them with `--build-arg ORCA_VERSION=v1.4.266` (also `CLAUDE_CODE_VERSION`, `CC_SWITCH_VERSION`).
 Build with a faster/closer Debian mirror when deb.debian.org is slow or flaky: `docker compose build --build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn`.
 
 ## Native install (no Docker)

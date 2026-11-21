@@ -8,6 +8,13 @@ ARG TTYD_VERSION=1.7.7
 ARG INSTALL_CLAUDE=true
 # Set to "false" to skip the cc-switch CLI (https://github.com/SaladDay/cc-switch-cli).
 ARG INSTALL_CC_SWITCH=true
+# Set to "false" to skip the Orca headless server (https://github.com/stablyai/orca).
+ARG INSTALL_ORCA=true
+# Tool versions: "latest" (default) resolves at build time; pin for reproducible builds, e.g.
+#   --build-arg ORCA_VERSION=v1.4.266 --build-arg CLAUDE_CODE_VERSION=2.1.0 --build-arg CC_SWITCH_VERSION=v4.6.0
+ARG CLAUDE_CODE_VERSION=latest
+ARG CC_SWITCH_VERSION=latest
+ARG ORCA_VERSION=latest
 # Swap the Debian mirror if deb.debian.org is slow/unreachable, e.g.
 # --build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn
 ARG APT_MIRROR=deb.debian.org
@@ -32,9 +39,10 @@ RUN set -eux; \
 # runtime user can self-update. Kept outside $HOME because $HOME is a persisted volume.
 ENV NPM_CONFIG_PREFIX=/opt/npm-global \
     PATH=/opt/ghost-bin:/opt/npm-global/bin:$PATH
-RUN mkdir -p /opt/npm-global /opt/ghost-bin && \
+RUN mkdir -p /opt/npm-global /opt/ghost-bin /opt/orca-server && \
     if [ "$INSTALL_CLAUDE" = "true" ]; then \
-      npm install -g @anthropic-ai/claude-code && npm cache clean --force; \
+      npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && npm cache clean --force; \
+      claude --version; \
     fi
 
 # cc-switch CLI — switch Claude Code provider configs from the terminal.
@@ -43,13 +51,34 @@ RUN if [ "$INSTALL_CC_SWITCH" = "true" ]; then \
       set -eux; \
       arch="${TARGETARCH:-amd64}"; \
       case "$arch" in arm64) a=arm64;; *) a=x64;; esac; \
-      curl -fsSL "https://github.com/SaladDay/cc-switch-cli/releases/latest/download/cc-switch-cli-linux-${a}-musl.tar.gz" -o /tmp/cc-switch-cli.tgz; \
+      if [ "$CC_SWITCH_VERSION" = "latest" ]; then rel="latest/download"; else rel="download/${CC_SWITCH_VERSION}"; fi; \
+      curl -fsSL "https://github.com/SaladDay/cc-switch-cli/releases/${rel}/cc-switch-cli-linux-${a}-musl.tar.gz" -o /tmp/cc-switch-cli.tgz; \
       mkdir -p /tmp/cc-switch-cli; \
       tar -xzf /tmp/cc-switch-cli.tgz -C /tmp/cc-switch-cli; \
       mv /tmp/cc-switch-cli/cc-switch /opt/ghost-bin/cc-switch; \
       chmod +x /opt/ghost-bin/cc-switch; \
       rm -rf /tmp/cc-switch-cli /tmp/cc-switch-cli.tgz; \
       /opt/ghost-bin/cc-switch --version; \
+    fi
+
+# Orca headless server (server-only tarball: bundles orcad + Node + the `orca-ide` CLI, no GTK/X11).
+# The CLI is named `orca-ide` on Linux. The archive is verified against the sha256 file of the same release.
+# Skip with --build-arg INSTALL_ORCA=false; pin with --build-arg ORCA_VERSION=v1.4.266.
+RUN if [ "$INSTALL_ORCA" = "true" ]; then \
+      set -eux; \
+      arch="${TARGETARCH:-amd64}"; \
+      case "$arch" in arm64) a=arm64;; *) a=x64;; esac; \
+      if [ "$ORCA_VERSION" = "latest" ]; then rel="latest/download"; else rel="download/${ORCA_VERSION}"; fi; \
+      base="https://github.com/stablyai/orca/releases/${rel}"; \
+      f="orca-server-linux-${a}.tar.gz"; \
+      mkdir -p /tmp/orca; cd /tmp/orca; \
+      curl -fsSL -O "$base/$f" -O "$base/orca-server-sha256sums.txt"; \
+      grep -F "$f" orca-server-sha256sums.txt | sha256sum --check -; \
+      mkdir -p /opt/orca-server; \
+      tar -xzf "$f" -C /opt/orca-server --strip-components=1; \
+      ln -s /opt/orca-server/bin/orca-ide /opt/ghost-bin/orca-ide; \
+      cd /; rm -rf /tmp/orca; \
+      /opt/ghost-bin/orca-ide --version; \
     fi
 
 # UTF-8 locale. debian-slim defaults to POSIX, where tmux renders every non-ASCII
@@ -81,7 +110,7 @@ RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /tmp/bashrc.snippet \
     && cat /tmp/bashrc.snippet >> /home/ghost/.bashrc \
     && rm /tmp/bashrc.snippet \
     && chmod +x /usr/local/bin/ghostdev-entrypoint \
-    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/npm-global /opt/ghost-bin
+    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/npm-global /opt/ghost-bin /opt/orca-server
 
 USER ghost
 WORKDIR /home/ghost

@@ -26,5 +26,6 @@ ghostdev 给浏览器提供的是宿主机上的**真实 shell**（默认还带 
 
 - **镜像和仓库里没有密钥。** 所有配置都通过环境变量。可选的 Proxmox 状态模块使用**只读 API Token**，绝不会使用 root 密码 —— 见 [`proxmox-stats.zh-CN.md`](proxmox-stats.zh-CN.md)。
 - **以非 root 用户运行。** 容器内用 `ghost`（uid 1000）；原生安装用你通过 `--user` 指定的用户。不要让会话以 root 运行。
+- **Orca（默认开启）。** 容器内运行 Orca 无头服务器，且不发布任何端口。如果你登录并通过 Orca Relay 配对，手机与容器之间的流量会经过 Orca 官方的中继服务（`relay.onorca.dev`），已配对的设备拥有 `ghost` 用户的 shell 权限。请把 `orca://pair?...` 链接当作密码对待，不要贴到日志或聊天里，并撤销不再使用的设备。可通过 `GHOSTDEV_ORCA_ENABLE=false` 关闭。见 [`orca.zh-CN.md`](orca.zh-CN.md)。
 - **终端能做的就是该用户能做的。** 如果你预装了 Claude Code，通过认证的访问者就可以运行它（并批准它的权限提示）。请合理限制该账号的权限范围。
 - **漏洞报告：** 请到 GitHub 仓库发起私有安全 Advisory，而不是公开 Issue。

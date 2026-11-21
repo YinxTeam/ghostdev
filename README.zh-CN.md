@@ -105,10 +105,14 @@ Web 终端本质上是**远程 shell**。ghostdev 故意只绑定到 `127.0.0.1`
 | `GHOSTDEV_FILES_ENABLED` | `true` | 内置文件管理器（[文档](docs/file-explorer.zh-CN.md)） |
 | `GHOSTDEV_FILES_ROOT` | 用户 home | 文件管理器被限制到的目录 |
 | `GHOSTDEV_FILES_READONLY` | `false` | `true` = 只能浏览/下载，UI 上无法写入 |
+| `GHOSTDEV_ORCA_ENABLE` | `true` | 运行 [Orca](docs/orca.zh-CN.md) 无头服务器(通过 Orca Relay 远程/手机访问) |
+| `GHOSTDEV_WORKSPACE` | `~/workspace` | Orca 的项目根目录(自动创建) |
 | `GHOSTDEV_PROXMOX_*` | _(关闭)_ | 可选的只读 Proxmox 宿主机状态（[文档](docs/proxmox-stats.zh-CN.md)） |
 
 构建不包含 Claude Code 的版本（纯 Web 终端）：`docker compose build --build-arg INSTALL_CLAUDE=false`。
 构建不包含 [cc-switch](https://github.com/SaladDay/cc-switch-cli) CLI 的版本（[用法](docs/cc-switch.zh-CN.md)）：`docker compose build --build-arg INSTALL_CC_SWITCH=false`。
+构建不包含 [Orca](https://github.com/stablyai/orca) 无头服务器的版本（[用法](docs/orca.zh-CN.md)）：`docker compose build --build-arg INSTALL_ORCA=false`。
+各工具版本默认在构建时取最新发布版；如需固定，使用 `--build-arg ORCA_VERSION=v1.4.266`（还有 `CLAUDE_CODE_VERSION`、`CC_SWITCH_VERSION`）。
 当 deb.debian.org 慢或不稳定时，可换用更快的 Debian 镜像源：`docker compose build --build-arg APT_MIRROR=mirrors.tuna.tsinghua.edu.cn`。
 
 ## 原生安装（不使用 Docker）

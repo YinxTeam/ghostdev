@@ -38,6 +38,11 @@ to `0.0.0.0`.
   [`proxmox-stats.md`](proxmox-stats.md).
 - **Runs as a non-root user.** The container runs as `ghost` (uid 1000); the native install runs
   as the `--user` you choose. Don't run the sessions as root.
+- **Orca (on by default).** The container runs an Orca headless server with no published port. If you
+  log in and pair with Orca Relay, traffic between your phone and the container goes through Orca's
+  relay service (`relay.onorca.dev`), and a paired device has a shell as `ghost`. Treat the
+  `orca://pair?...` link like a password, never paste it into logs or chats, and revoke devices you
+  no longer use. Disable with `GHOSTDEV_ORCA_ENABLE=false`. See [`orca.md`](orca.md).
 - **The terminal can do anything that user can.** If you preinstall Claude Code, an authenticated
   visitor can run it (and approve its permission prompts). Scope the user account accordingly.
 - **Reporting:** open a private security advisory on the GitHub repo rather than a public issue.

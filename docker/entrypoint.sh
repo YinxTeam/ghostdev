@@ -72,7 +72,24 @@ SSHD
   echo "ghostdev ssh: sshd :$SSH_PORT (key-only, user $(id -un))"
 fi
 
-cleanup(){ kill "$STATS_PID" "$TTYD_PID" "$NGINX_PID" $SSHD_PID 2>/dev/null || true; }
+# Orca headless server (on by default; GHOSTDEV_ORCA_ENABLE=false to disable). It is beta software,
+# so it is restarted on its own with a backoff and is deliberately NOT part of `wait -n` below:
+# an Orca crash must not take the web terminal down. No port is published; mobile access goes out
+# through Orca Relay (run `orca-ide auth login` then `orca-ide pair --mobile --relay` once, see docs/orca.md).
+ORCA_PID=""
+if [ "${GHOSTDEV_ORCA_ENABLE:-true}" = "true" ] && command -v orca-ide >/dev/null 2>&1; then
+  WORKSPACE="${GHOSTDEV_WORKSPACE:-$HOME/workspace}"
+  mkdir -p "$WORKSPACE"
+  ( while true; do
+      orca-ide serve --supervise --project-root "$WORKSPACE" || true
+      echo "ghostdev orca: exited, restarting in 5s" >&2
+      sleep 5
+    done ) &
+  ORCA_PID=$!
+  echo "ghostdev orca: serve (project root $WORKSPACE); pair with: orca-ide pair --mobile --relay"
+fi
+
+cleanup(){ kill "$STATS_PID" "$TTYD_PID" "$NGINX_PID" $SSHD_PID $ORCA_PID 2>/dev/null || true; }
 trap cleanup EXIT INT TERM
 
 echo "ghostdev up: nginx :$NGINX_LISTEN -> ttyd :$TTYD_PORT + stats :$STATS_PORT (label=$GHOSTDEV_NODE_LABEL)"
