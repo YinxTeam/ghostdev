@@ -131,4 +131,11 @@ See [SECURITY.md](SECURITY.md). In short: Relay traffic goes through Orca's rela
 
 - An Orca crash doesn't affect the web terminal; the entrypoint restarts it every 5 s. Logs: `docker logs ghostdev`.
 - `auth login` fails: make sure the server is running (`docker exec ghostdev pgrep -fa orca`) and the container can reach `login.onorca.dev:443`.
+- `orcad_identity_mismatch: the server on remote port 6768 is not this host's Orca server`: whatever answers on the port the client dialed is not the server it was paired with. Common causes:
+  1. The tunnel's local port clashes with that computer's own Orca (also 6768 by default), so the client reached its local Orca. Use a free port such as 16768 for the tunnel and the same port in `--address`; on Windows check with `netstat -ano | findstr 6768`.
+  2. The tunnel isn't up (`ssh` exited, port in use), or the `--address` port doesn't match the tunnel port.
+  3. The data volume was recreated/reset so the server identity changed, while the client still holds the old pairing. Delete the old Remote Server on the client, then `pair` again and re-add it.
+  4. You used the desktop app's built-in "SSH hosts" feature (Orca deploys and manages its own server over SSH). It clashes with the Orca already running in the container. Don't use it with ghostdev; connect manually through the SSH tunnel above.
+     Such servers can't be removed from Remote Orca Servers (error `Orca runs this server on an SSH host for you`). Remove them in Settings > Orca on your SSH hosts, or run `orca environment stop --environment <name> --yes` (stops the server the desktop deployed on the host); if the host is gone, use `orca environment forget --environment <name> --yes` (unlinks locally without contacting the host).
+  5. SSH went to something other than the ghostdev container (e.g. the host's port 22 instead of the mapped 2222).
 - Known issue: `--mobile-pairing` with a narrow `--bind` is refused (upstream issue #39728).

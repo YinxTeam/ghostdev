@@ -131,4 +131,11 @@ server-only 版本不能由配对的客户端更新。升级方式:重新构建�
 
 - Orca 崩溃不会影响网页终端,入口脚本会每 5 秒自动重启它,日志见 `docker logs ghostdev`。
 - `auth login` 失败:确认服务在运行(`docker exec ghostdev pgrep -fa orca`),且容器能访问 `login.onorca.dev:443`。
+- 报 `orcad_identity_mismatch: the server on remote port 6768 is not this host's Orca server`:客户端连到的那个端口上,回应的不是配对时的那台服务器。常见原因:
+  1. 隧道的本地端口和这台电脑自己的 Orca(默认也是 6768)冲突,连到了本机的 Orca。隧道请用 16768 之类的空闲端口,并让链接的 `--address` 与之一致;Windows 可用 `netstat -ano | findstr 6768` 检查占用。
+  2. 隧道没建成功(`ssh` 已退出、端口被占),或 `--address` 写的端口和隧道端口不一致。
+  3. 容器的数据卷被重建/重置过,服务器身份变了,而客户端还保存着旧配对。在客户端删除旧的 Remote Server,重新 `pair` 并添加。
+  4. 你用的是 Orca 桌面端自带的 "SSH hosts"(由 Orca 通过 SSH 在远端自己部署、管理服务器)。它会和容器里已经在跑的 Orca 冲突。ghostdev 不要用这个功能,按上面的"SSH 隧道"手动连接。
+     之后在 Remote Orca Servers 里无法直接删除这类服务器(报 `Orca runs this server on an SSH host for you`),请在 Settings > Orca on your SSH hosts 里移除,或执行 `orca environment stop --environment <名称> --yes`(会停掉远端那个由桌面端部署的服务器);主机已不存在则用 `orca environment forget --environment <名称> --yes`(只在本机解除关联,不联系主机)。
+  5. SSH 连到的不是 ghostdev 容器(例如宿主机的 22 端口,而不是映射的 2222)。
 - 已知问题:`--mobile-pairing` 配合窄范围的 `--bind` 会被拒绝(上游 issue #39728)。
