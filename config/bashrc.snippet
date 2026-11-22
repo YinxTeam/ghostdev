@@ -53,4 +53,6 @@ if command -v eza >/dev/null 2>&1; then
   alias la='eza -lAh --group-directories-first --git'
   alias lt='eza --tree --level=2'
 fi
+# nvm (installed in /opt/nvm); node itself is already on PATH via /opt/ghost-node
+[ -s /opt/nvm/nvm.sh ] && . /opt/nvm/nvm.sh --no-use
 # <<< ghostdev shell tweaks <<<

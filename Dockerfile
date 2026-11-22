@@ -23,7 +23,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN sed -i "s|deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update -o Acquire::Retries=5 \
     && apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
-      nginx-light nodejs npm tmux ca-certificates curl gettext-base tini procps git less openssh-server \
+      nginx-light tmux ca-certificates curl gettext-base tini procps git less openssh-server \
     && rm -rf /var/lib/apt/lists/*
 
 # ttyd static release binary (multi-arch).
@@ -34,13 +34,30 @@ RUN set -eux; \
     chmod +x /usr/local/bin/ttyd; \
     /usr/local/bin/ttyd --version
 
+# Node.js via nvm (instead of Debian's apt nodejs). nvm lives in /opt/nvm and is chowned to uid 1000
+# below, so the non-root user can `nvm install`/`npm i -g`/self-update. Kept outside $HOME because
+# $HOME is a persisted volume. /opt/ghost-node is a stable symlink to the installed version's dir
+# so PATH works in non-interactive shells (tini/entrypoint, ssh) without sourcing nvm.sh.
+# NPM_CONFIG_PREFIX must stay unset: nvm refuses to run when it is set.
+ARG NVM_VERSION=v0.40.3
+ARG NODE_VERSION=24
+ARG PNPM_VERSION=latest
+ENV NVM_DIR=/opt/nvm \
+    PATH=/opt/ghost-bin:/opt/ghost-node/bin:$PATH
+RUN set -ex; \
+    mkdir -p "$NVM_DIR" /opt/ghost-bin /opt/orca-server; \
+    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | PROFILE=/dev/null bash; \
+    . "$NVM_DIR/nvm.sh"; \
+    nvm install "$NODE_VERSION"; \
+    nvm alias default "$NODE_VERSION"; \
+    ln -s "$(dirname "$(dirname "$(nvm which "$NODE_VERSION")")")" /opt/ghost-node; \
+    npm install -g "pnpm@${PNPM_VERSION}"; \
+    npm cache clean --force; \
+    nvm cache clear; \
+    node --version; npm --version; pnpm --version
+
 # Claude Code CLI (the whole point). Skip with --build-arg INSTALL_CLAUDE=false.
-# Installed into /opt/npm-global (not /usr) and chowned to uid 1000 below, so the non-root
-# runtime user can self-update. Kept outside $HOME because $HOME is a persisted volume.
-ENV NPM_CONFIG_PREFIX=/opt/npm-global \
-    PATH=/opt/ghost-bin:/opt/npm-global/bin:$PATH
-RUN mkdir -p /opt/npm-global /opt/ghost-bin /opt/orca-server && \
-    if [ "$INSTALL_CLAUDE" = "true" ]; then \
+RUN if [ "$INSTALL_CLAUDE" = "true" ]; then \
       npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && npm cache clean --force; \
       claude --version; \
     fi
@@ -88,13 +105,14 @@ ENV LANG=C.UTF-8 \
 
 # Non-root runtime user.
 # sshd runs unprivileged as ghost (see entrypoint): '*' = no usable password but NOT locked
-# (so pubkey login works); /run/sshd is the privsep dir; /etc/profile.d re-adds the npm prefix
+# (so pubkey login works); /run/sshd is the privsep dir; /etc/profile.d re-adds the node/nvm PATH
 # and UTF-8 locale for SSH login shells (which reset PATH via /etc/profile).
 RUN useradd -m -s /bin/bash -u 1000 ghost \
     && usermod -p '*' ghost \
     && mkdir -p /run/sshd && chown ghost:ghost /run/sshd \
     && rm -f /etc/ssh/ssh_host_*_key* \
-    && echo 'export PATH=/opt/ghost-bin:/opt/npm-global/bin:$PATH' > /etc/profile.d/ghostdev.sh \
+    && echo 'export PATH=/opt/ghost-bin:/opt/ghost-node/bin:$PATH' > /etc/profile.d/ghostdev.sh \
+    && echo 'export NVM_DIR=/opt/nvm' >> /etc/profile.d/ghostdev.sh \
     && echo 'export LANG=C.UTF-8 LC_ALL=C.UTF-8' >> /etc/profile.d/ghostdev.sh
 
 COPY web/                       /var/www/ghostdev/
@@ -110,7 +128,7 @@ RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /tmp/bashrc.snippet \
     && cat /tmp/bashrc.snippet >> /home/ghost/.bashrc \
     && rm /tmp/bashrc.snippet \
     && chmod +x /usr/local/bin/ghostdev-entrypoint \
-    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/npm-global /opt/ghost-bin /opt/orca-server
+    && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/nvm /opt/ghost-bin /opt/orca-server
 
 USER ghost
 WORKDIR /home/ghost
