@@ -89,7 +89,21 @@ if [ "${GHOSTDEV_ORCA_ENABLE:-true}" = "true" ] && command -v orca-ide >/dev/nul
   echo "ghostdev orca: serve (project root $WORKSPACE); pair with: orca-ide pair --mobile --relay"
 fi
 
-cleanup(){ kill "$STATS_PID" "$TTYD_PID" "$NGINX_PID" $SSHD_PID $ORCA_PID 2>/dev/null || true; }
+# Daily auto-update of Claude Code, cc-switch and Orca (GHOSTDEV_AUTOUPDATE=false to disable;
+# GHOSTDEV_AUTOUPDATE_HOURS sets the period, default 24). Like Orca, deliberately outside `wait -n`.
+# First run is delayed 10 min so startup isn't slowed, and a failed run just waits for the next one.
+UPDATER_PID=""
+if [ "${GHOSTDEV_AUTOUPDATE:-true}" = "true" ] && command -v ghost-update >/dev/null 2>&1; then
+  ( sleep 600
+    while true; do
+      ghost-update all || true
+      sleep "$(( ${GHOSTDEV_AUTOUPDATE_HOURS:-24} * 3600 ))"
+    done ) &
+  UPDATER_PID=$!
+  echo "ghostdev autoupdate: every ${GHOSTDEV_AUTOUPDATE_HOURS:-24}h (claude, cc-switch, orca)"
+fi
+
+cleanup(){ kill "$STATS_PID" "$TTYD_PID" "$NGINX_PID" $SSHD_PID $ORCA_PID $UPDATER_PID 2>/dev/null || true; }
 trap cleanup EXIT INT TERM
 
 echo "ghostdev up: nginx :$NGINX_LISTEN -> ttyd :$TTYD_PORT + stats :$STATS_PORT (label=$GHOSTDEV_NODE_LABEL)"

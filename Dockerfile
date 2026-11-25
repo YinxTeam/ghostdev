@@ -121,13 +121,14 @@ COPY config/tmux.conf           /home/ghost/.tmux.conf
 COPY config/bashrc.snippet      /tmp/bashrc.snippet
 COPY docker/nginx.conf.tmpl     /etc/nginx/templates/ghostdev.conf.tmpl
 COPY docker/entrypoint.sh       /usr/local/bin/ghostdev-entrypoint
+COPY docker/ghost-update.sh      /opt/ghost-bin/ghost-update
 
 # Strip CR from files COPYed from a possibly CRLF (Windows) checkout, then wire up the user env.
-RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /tmp/bashrc.snippet \
+RUN sed -i -e 's/\r$//' /usr/local/bin/ghostdev-entrypoint /opt/ghost-bin/ghost-update /tmp/bashrc.snippet \
              /home/ghost/.tmux.conf /etc/nginx/templates/ghostdev.conf.tmpl \
     && cat /tmp/bashrc.snippet >> /home/ghost/.bashrc \
     && rm /tmp/bashrc.snippet \
-    && chmod +x /usr/local/bin/ghostdev-entrypoint \
+    && chmod +x /usr/local/bin/ghostdev-entrypoint /opt/ghost-bin/ghost-update \
     && chown -R ghost:ghost /home/ghost /opt/ghostdev-stats /var/www/ghostdev /opt/nvm /opt/ghost-bin /opt/orca-server
 
 USER ghost

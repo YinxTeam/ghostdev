@@ -121,7 +121,18 @@ Orca 的状态(配对密钥、已配对设备、登录态)保存在 `~/.config/o
 
 ## 升级
 
-server-only 版本不能由配对的客户端更新。升级方式:重新构建镜像(默认取最新版本)并重启容器。
+server-only 版本没有 `update` 命令,也不能由配对的客户端更新。两种升级方式:
+
+- 默认每 24 小时自动更新一次 Claude Code、cc-switch 和 Orca(`GHOSTDEV_AUTOUPDATE=false` 关闭,`GHOSTDEV_AUTOUPDATE_HOURS` 调整间隔;Orca 有新版本时会重启几秒)。
+- 手动立即更新(无需重建镜像,配对信息保留;不带 `orca` 则更新全部):
+
+  ```bash
+  docker exec -it ghostdev ghost-update orca            # 最新版本
+  docker exec -it ghostdev ghost-update orca v1.4.270   # 指定版本
+  ```
+
+  脚本会校验 sha256、替换 `/opt/orca-server`,并停掉 Orca,由入口脚本约 5 秒内自动拉起新版本。注意这样更新的版本在重建镜像后会回到镜像里的版本。
+- 重新构建镜像(默认取最新版本;建议加 `--no-cache` 避免命中旧缓存)并重启容器。
 
 ## 安全
 

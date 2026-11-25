@@ -121,7 +121,18 @@ Orca's state (pairing keys, paired devices, login) lives in `~/.config/orca`, i.
 
 ## Upgrading
 
-Paired clients can't update the server-only build. Rebuild the image (defaults to the latest release) and restart the container.
+The server-only build has no `update` command, and paired clients can't update it. Two options:
+
+- Auto-update: Claude Code, cc-switch and Orca are updated every 24h by default (`GHOSTDEV_AUTOUPDATE=false` to disable, `GHOSTDEV_AUTOUPDATE_HOURS` to change the period; Orca restarts for a few seconds when a new version lands).
+- Manual update now, no rebuild, pairing kept (omit `orca` to update everything):
+
+  ```bash
+  docker exec -it ghostdev ghost-update orca            # latest
+  docker exec -it ghostdev ghost-update orca v1.4.270   # specific version
+  ```
+
+  It verifies the sha256, replaces `/opt/orca-server`, and stops Orca; the entrypoint restarts it within ~5s. A rebuilt image reverts to the version baked into the image.
+- Rebuild the image (defaults to the latest release; use `--no-cache` to avoid a stale layer) and restart the container.
 
 ## Security
 
